@@ -16,15 +16,17 @@ type apiConfig struct {
 func main() {
 	cfg := &apiConfig{}
 	mux := http.NewServeMux()
-	srvr := &http.Server{
+	server := &http.Server{
 		Addr:    ":" + port,
-		Handler: mux,
+		Handler: middlewareLog(mux),
 	}
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 	mux.HandleFunc("GET /api/ready", handlerReady)
+	mux.HandleFunc("POST /api/validate_name", handlerValidateName)
+
 	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerReset)
 
 	log.Printf("Starting Crumbs server on port %v...", port)
-	log.Fatal(srvr.ListenAndServe())
+	log.Fatal(server.ListenAndServe())
 }
