@@ -25,7 +25,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		log.Fatal("Couldn't establish connection to database: %v", err)
+		log.Fatalf("Couldn't establish connection to database: %v", err)
 	}
 
 	cfg := &apiConfig{
@@ -40,6 +40,7 @@ func main() {
 
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 	mux.HandleFunc("GET /api/ready", handlerReady)
+	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
 	mux.HandleFunc("POST /api/validate_name", handlerValidateName)
 
 	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
