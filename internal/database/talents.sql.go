@@ -36,3 +36,59 @@ func (q *Queries) CreateTalent(ctx context.Context, arg CreateTalentParams) (Tal
 	)
 	return i, err
 }
+
+const getTalentByID = `-- name: GetTalentByID :one
+SELECT id, created_at, updated_at, deleted_at, name, email, user_id FROM talents
+WHERE id = $1
+`
+
+func (q *Queries) GetTalentByID(ctx context.Context, id uuid.UUID) (Talent, error) {
+	row := q.db.QueryRowContext(ctx, getTalentByID, id)
+	var i Talent
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Name,
+		&i.Email,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getTalents = `-- name: GetTalents :many
+SELECT id, created_at, updated_at, deleted_at, name, email, user_id FROM talents
+ORDER BY name
+`
+
+func (q *Queries) GetTalents(ctx context.Context) ([]Talent, error) {
+	rows, err := q.db.QueryContext(ctx, getTalents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Talent
+	for rows.Next() {
+		var i Talent
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.Name,
+			&i.Email,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

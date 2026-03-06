@@ -40,6 +40,8 @@ func main() {
 
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 	mux.HandleFunc("GET /api/ready", handlerReady)
+	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
+	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
 	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
 	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
 
