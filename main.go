@@ -42,10 +42,13 @@ func main() {
 	mux.HandleFunc("GET /api/ready", handlerReady)
 	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
 	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
+
+	mux.HandleFunc("POST /api/login", cfg.handlerLogin)
 	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
 	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
 
 	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
+
 	mux.HandleFunc("POST /admin/reset", cfg.handlerReset)
 
 	log.Printf("Starting Crumbs server on port %v...", port)

@@ -19,8 +19,8 @@ func (cfg *apiConfig) handlerTalentsCreate(w http.ResponseWriter, r *http.Reques
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
-		log.Printf("Error decoding name: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode name")
+		log.Printf("Error decoding JSON: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode JSON")
 		return
 	}
 	if params.Name == "" {
