@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/huangmatty/crumbs/internal/auth"
 	"github.com/huangmatty/crumbs/internal/database"
 )
@@ -14,6 +16,16 @@ const (
 	maxEmailLength    = 75
 	minPasswordLength = 12
 )
+
+type UserDTO struct {
+	ID           uuid.UUID `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	AccessToken  string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
+}
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	params := struct {
@@ -67,9 +79,11 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	user := UserDTO{
-		ID:       dbUser.ID,
-		Username: dbUser.Username,
-		Email:    dbUser.Email,
+		ID:        dbUser.ID,
+		CreatedAt: dbUser.CreatedAt,
+		UpdatedAt: dbUser.UpdatedAt,
+		Username:  dbUser.Username,
+		Email:     dbUser.Email,
 	}
 	respondWithJSON(w, http.StatusCreated, user)
 }

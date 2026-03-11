@@ -16,8 +16,10 @@ const port = "8080"
 const filepathRoot = "."
 
 type apiConfig struct {
-	db     *database.Queries
-	fsHits atomic.Int32
+	db        *database.Queries
+	platform  string
+	jwtSecret string
+	fsHits    atomic.Int32
 }
 
 func main() {
@@ -27,9 +29,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't establish connection to database: %v", err)
 	}
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM environment variable is not set")
+	}
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is not set")
+	}
 
 	cfg := &apiConfig{
-		db: database.New(db),
+		db:        database.New(db),
+		platform:  platform,
+		jwtSecret: jwtSecret,
 	}
 
 	mux := http.NewServeMux()
@@ -44,6 +56,8 @@ func main() {
 	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
 
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin)
+	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh)
+	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke)
 	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
 	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
 
