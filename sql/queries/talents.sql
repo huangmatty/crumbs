@@ -5,8 +5,15 @@ RETURNING *;
 
 -- name: GetTalents :many
 SELECT * FROM talents
+WHERE deleted_at IS NULL
 ORDER BY name;
 
 -- name: GetTalentByID :one
 SELECT * FROM talents
 WHERE id = $1;
+
+-- name: SoftDeleteTalent :one
+UPDATE talents
+SET deleted_at = NOW()
+WHERE id = $1
+RETURNING *;

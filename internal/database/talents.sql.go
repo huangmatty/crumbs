@@ -59,6 +59,7 @@ func (q *Queries) GetTalentByID(ctx context.Context, id uuid.UUID) (Talent, erro
 
 const getTalents = `-- name: GetTalents :many
 SELECT id, created_at, updated_at, deleted_at, name, email, user_id FROM talents
+WHERE deleted_at IS NULL
 ORDER BY name
 `
 
@@ -91,4 +92,26 @@ func (q *Queries) GetTalents(ctx context.Context) ([]Talent, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const softDeleteTalent = `-- name: SoftDeleteTalent :one
+UPDATE talents
+SET deleted_at = NOW()
+WHERE id = $1
+RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
+`
+
+func (q *Queries) SoftDeleteTalent(ctx context.Context, id uuid.UUID) (Talent, error) {
+	row := q.db.QueryRowContext(ctx, softDeleteTalent, id)
+	var i Talent
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Name,
+		&i.Email,
+		&i.UserID,
+	)
+	return i, err
 }
