@@ -12,7 +12,7 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		log.Printf("Error getting refresh token: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Couldn't get refresh token")
+		respondWithError(w, http.StatusUnauthorized, "Couldn't get refresh token")
 		return
 	}
 	dbRefreshToken, err := cfg.db.GetRefreshToken(r.Context(), refreshToken)
@@ -34,7 +34,7 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.CreateJWT(dbUser.ID, cfg.jwtSecret, time.Hour)
 	if err != nil {
 		log.Printf("Error creating JWT: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to create JWT")
+		respondWithError(w, http.StatusInternalServerError, "Failed to create access token")
 		return
 	}
 	respondWithJSON(w, http.StatusOK, struct {

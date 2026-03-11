@@ -21,7 +21,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode JSON")
+		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
 		return
 	}
 

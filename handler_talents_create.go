@@ -23,16 +23,16 @@ type TalentDTO struct {
 }
 
 func (cfg *apiConfig) handlerTalentsCreate(w http.ResponseWriter, r *http.Request) {
-	token, err := auth.GetBearerToken(r.Header)
+	accessToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		log.Printf("Error getting user token: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Couldn't get user token")
+		log.Printf("Error getting JWT: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
 		return
 	}
-	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
 	if err != nil {
-		log.Printf("Error validating token: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid token")
+		log.Printf("Error validating JWT: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
 		return
 	}
 
@@ -43,7 +43,7 @@ func (cfg *apiConfig) handlerTalentsCreate(w http.ResponseWriter, r *http.Reques
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode JSON")
+		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
 		return
 	}
 	if params.Name == "" {

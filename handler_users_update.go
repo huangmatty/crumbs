@@ -4,32 +4,26 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/huangmatty/crumbs/internal/auth"
 	"github.com/huangmatty/crumbs/internal/database"
 )
 
-const (
-	maxUsernameLength = 50
-	maxEmailLength    = 75
-	minPasswordLength = 12
-)
+func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request) {
+	accessToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		log.Printf("Error getting JWT: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
+		return
+	}
+	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
+	if err != nil {
+		log.Printf("Error validating JWT: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
+		return
+	}
 
-type UserDTO struct {
-	ID           uuid.UUID `json:"id"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	AccessToken  string    `json:"token"`
-	RefreshToken string    `json:"refresh_token"`
-}
-
-func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	params := struct {
-		Username string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}{}
@@ -38,14 +32,6 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
 		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
-		return
-	}
-	if params.Username == "" {
-		respondWithError(w, http.StatusBadRequest, "Missing username")
-		return
-	}
-	if len(params.Username) > maxUsernameLength {
-		respondWithError(w, http.StatusBadRequest, "Username is too long")
 		return
 	}
 	if params.Email == "" {
@@ -67,15 +53,22 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Failed to hash password")
 		return
 	}
-
-	dbUser, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
-		Username:       params.Username,
-		Email:          params.Email,
+	_, err = cfg.db.UpdateUserPassword(r.Context(), database.UpdateUserPasswordParams{
 		HashedPassword: hashedPassword,
+		ID:             userID,
 	})
 	if err != nil {
-		log.Printf("Error creating user: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
+		log.Printf("Error updating user password: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to update password")
+		return
+	}
+	dbUser, err := cfg.db.UpdateUserEmail(r.Context(), database.UpdateUserEmailParams{
+		Email: params.Email,
+		ID:    userID,
+	})
+	if err != nil {
+		log.Printf("Error updating user email: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to update email")
 		return
 	}
 	user := UserDTO{
@@ -85,5 +78,5 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		Username:  dbUser.Username,
 		Email:     dbUser.Email,
 	}
-	respondWithJSON(w, http.StatusCreated, user)
+	respondWithJSON(w, http.StatusOK, user)
 }

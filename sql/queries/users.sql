@@ -13,3 +13,15 @@ WHERE id IN (
     SELECT user_id FROM refresh_tokens
     WHERE token = $1
 );
+
+-- name: UpdateUserEmail :one
+UPDATE users
+SET updated_at = NOW(), email = $1
+WHERE id = $2
+RETURNING *;
+
+-- name: UpdateUserPassword :one
+UPDATE users
+SET updated_at = NOW(), hashed_password = $1
+WHERE id = $2
+RETURNING *;

@@ -55,6 +55,8 @@ func main() {
 	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
 	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
 
+	mux.HandleFunc("PUT /api/users", cfg.handlerUsersUpdate)
+
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke)
