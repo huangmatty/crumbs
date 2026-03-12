@@ -6,6 +6,7 @@ RETURNING *;
 -- name: GetTalents :many
 SELECT * FROM talents
 WHERE deleted_at IS NULL
+AND user_id = $1
 ORDER BY name;
 
 -- name: GetTalentByID :one

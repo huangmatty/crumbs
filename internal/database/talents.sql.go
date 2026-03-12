@@ -60,11 +60,12 @@ func (q *Queries) GetTalentByID(ctx context.Context, id uuid.UUID) (Talent, erro
 const getTalents = `-- name: GetTalents :many
 SELECT id, created_at, updated_at, deleted_at, name, email, user_id FROM talents
 WHERE deleted_at IS NULL
+AND user_id = $1
 ORDER BY name
 `
 
-func (q *Queries) GetTalents(ctx context.Context) ([]Talent, error) {
-	rows, err := q.db.QueryContext(ctx, getTalents)
+func (q *Queries) GetTalents(ctx context.Context, userID uuid.UUID) ([]Talent, error) {
+	rows, err := q.db.QueryContext(ctx, getTalents, userID)
 	if err != nil {
 		return nil, err
 	}
