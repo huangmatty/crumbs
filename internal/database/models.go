@@ -9,7 +9,44 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/huangmatty/crumbs/internal/psql_types"
 )
+
+type Buyer struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    sql.NullTime
+	Name         string
+	Email        sql.NullString
+	PhoneNumbers []psql_types.Phone
+	UserID       uuid.UUID
+}
+
+type Offer struct {
+	ID         uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  sql.NullTime
+	Gaurantees []psql_types.Money
+	UserID     uuid.UUID
+}
+
+type OffersBuyer struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	OfferID   uuid.NullUUID
+	BuyerID   uuid.NullUUID
+}
+
+type OffersTalent struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	OfferID   uuid.NullUUID
+	TalentID  uuid.NullUUID
+}
 
 type RefreshToken struct {
 	Token     string

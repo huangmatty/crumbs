@@ -6,3 +6,12 @@ sql:
     gen:
       go:
         out: "internal/database"
+        overrides:
+          - db_type: "phone"
+            go_type:
+              import: "github.com/huangmatty/crumbs/internal/psql_types"
+              type: "Phone"
+          - db_type: "money"
+            go_type:
+              import: "github.com/huangmatty/crumbs/internal/psql_types"
+              type: "Money"
