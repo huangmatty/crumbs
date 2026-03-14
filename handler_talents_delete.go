@@ -42,7 +42,6 @@ func (cfg *apiConfig) handlerTalentsDelete(w http.ResponseWriter, r *http.Reques
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve talent")
 		return
 	}
-
 	if userID != dbTalent.UserID {
 		respondWithError(w, http.StatusForbidden, "Cannot delete talent")
 		return

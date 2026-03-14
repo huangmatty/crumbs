@@ -7,23 +7,25 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
 
 const createTalent = `-- name: CreateTalent :one
-INSERT INTO talents (name, user_id)
-VALUES ($1, $2)
+INSERT INTO talents (name, email, user_id)
+VALUES ($1, $2, $3)
 RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
 `
 
 type CreateTalentParams struct {
 	Name   string
+	Email  sql.NullString
 	UserID uuid.UUID
 }
 
 func (q *Queries) CreateTalent(ctx context.Context, arg CreateTalentParams) (Talent, error) {
-	row := q.db.QueryRowContext(ctx, createTalent, arg.Name, arg.UserID)
+	row := q.db.QueryRowContext(ctx, createTalent, arg.Name, arg.Email, arg.UserID)
 	var i Talent
 	err := row.Scan(
 		&i.ID,
@@ -104,6 +106,60 @@ RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
 
 func (q *Queries) SoftDeleteTalent(ctx context.Context, id uuid.UUID) (Talent, error) {
 	row := q.db.QueryRowContext(ctx, softDeleteTalent, id)
+	var i Talent
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Name,
+		&i.Email,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const updateTalentEmail = `-- name: UpdateTalentEmail :one
+UPDATE talents
+SET updated_at = NOW(), email = $1
+WHERE id = $2
+RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
+`
+
+type UpdateTalentEmailParams struct {
+	Email sql.NullString
+	ID    uuid.UUID
+}
+
+func (q *Queries) UpdateTalentEmail(ctx context.Context, arg UpdateTalentEmailParams) (Talent, error) {
+	row := q.db.QueryRowContext(ctx, updateTalentEmail, arg.Email, arg.ID)
+	var i Talent
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Name,
+		&i.Email,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const updateTalentName = `-- name: UpdateTalentName :one
+UPDATE talents
+SET updated_at = NOW(), name = $1
+WHERE id = $2
+RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
+`
+
+type UpdateTalentNameParams struct {
+	Name string
+	ID   uuid.UUID
+}
+
+func (q *Queries) UpdateTalentName(ctx context.Context, arg UpdateTalentNameParams) (Talent, error) {
+	row := q.db.QueryRowContext(ctx, updateTalentName, arg.Name, arg.ID)
 	var i Talent
 	err := row.Scan(
 		&i.ID,

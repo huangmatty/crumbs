@@ -1,6 +1,6 @@
 -- name: CreateTalent :one
-INSERT INTO talents (name, user_id)
-VALUES ($1, $2)
+INSERT INTO talents (name, email, user_id)
+VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetTalents :many
@@ -12,6 +12,18 @@ ORDER BY name;
 -- name: GetTalentByID :one
 SELECT * FROM talents
 WHERE id = $1;
+
+-- name: UpdateTalentName :one
+UPDATE talents
+SET updated_at = NOW(), name = $1
+WHERE id = $2
+RETURNING *;
+
+-- name: UpdateTalentEmail :one
+UPDATE talents
+SET updated_at = NOW(), email = $1
+WHERE id = $2
+RETURNING *;
 
 -- name: SoftDeleteTalent :one
 UPDATE talents

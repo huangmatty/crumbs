@@ -1,12 +1,15 @@
 -- +goose Up
-CREATE TABLE offers_buyers (
+CREATE TABLE phones (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    offer_id UUID REFERENCES offers (id) ON DELETE CASCADE,
+    deleted_at TIMESTAMP,
+    country_code CHAR(3) NOT NULL,
+    number CHAR(20) NOT NULL,
+    UNIQUE(country_code, number),
     buyer_id UUID REFERENCES buyers (id) ON DELETE CASCADE,
-    UNIQUE(offer_id, buyer_id)
+    talent_id UUID REFERENCES talents (id) ON DELETE CASCADE
 );
 
 -- +goose Down
-DROP TABLE offers_buyers;
+DROP TABLE phones;

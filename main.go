@@ -52,21 +52,22 @@ func main() {
 
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 	mux.HandleFunc("GET /api/ready", handlerReady)
-	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
-	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
-
-	mux.HandleFunc("PUT /api/users", cfg.handlerUsersUpdate)
-
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin)
 	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke)
-	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
-	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
 
+	mux.HandleFunc("PUT /api/users", cfg.handlerUsersUpdate)
+	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
+
+	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
+	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
+	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
 	mux.HandleFunc("DELETE /api/talent/{talentID}", cfg.handlerTalentsDelete)
 
-	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
+	mux.HandleFunc("GET /api/buyers/{buyerID}", cfg.handlerBuyersGet)
+	mux.HandleFunc("POST /api/buyers", cfg.handlerBuyersCreate)
 
+	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerReset)
 
 	log.Printf("Starting Crumbs server on port %v...", port)

@@ -71,6 +71,7 @@ func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Failed to update email")
 		return
 	}
+
 	user := UserDTO{
 		ID:        dbUser.ID,
 		CreatedAt: dbUser.CreatedAt,

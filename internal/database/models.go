@@ -9,43 +9,66 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/huangmatty/crumbs/internal/psql_types"
 )
 
 type Buyer struct {
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	DeletedAt    sql.NullTime
-	Name         string
-	Email        sql.NullString
-	PhoneNumbers []psql_types.Phone
-	UserID       uuid.UUID
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt sql.NullTime
+	Name      string
+	Email     string
+	UserID    uuid.UUID
+}
+
+type Guarantee struct {
+	ID            uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	DeletedAt     sql.NullTime
+	Amount        int32
+	CurrencyAlpha string
+	DueDate       sql.NullTime
+	OfferID       uuid.UUID
 }
 
 type Offer struct {
-	ID         uuid.UUID
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	DeletedAt  sql.NullTime
-	Gaurantees []psql_types.Money
-	UserID     uuid.UUID
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt sql.NullTime
+	StartDate sql.NullTime
+	EndDate   sql.NullTime
+	UserID    uuid.UUID
 }
 
 type OffersBuyer struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	OfferID   uuid.NullUUID
-	BuyerID   uuid.NullUUID
+	DeletedAt sql.NullTime
+	OfferID   uuid.UUID
+	BuyerID   uuid.UUID
 }
 
 type OffersTalent struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	OfferID   uuid.NullUUID
-	TalentID  uuid.NullUUID
+	DeletedAt sql.NullTime
+	OfferID   uuid.UUID
+	TalentID  uuid.UUID
+}
+
+type Phone struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   sql.NullTime
+	CountryCode string
+	Number      string
+	BuyerID     uuid.NullUUID
+	TalentID    uuid.NullUUID
 }
 
 type RefreshToken struct {

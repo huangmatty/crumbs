@@ -78,6 +78,7 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
 		return
 	}
+
 	user := UserDTO{
 		ID:        dbUser.ID,
 		CreatedAt: dbUser.CreatedAt,

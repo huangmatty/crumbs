@@ -12,7 +12,7 @@ import (
 func (cfg *apiConfig) handlerTalentsGet(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		log.Printf("Error getting access token")
+		log.Printf("Error getting JWT")
 		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
 		return
 	}
@@ -26,7 +26,7 @@ func (cfg *apiConfig) handlerTalentsGet(w http.ResponseWriter, r *http.Request) 
 	talentIDStr := r.PathValue("talentID")
 	talentID, err := uuid.Parse(talentIDStr)
 	if err != nil {
-		log.Printf("Error parsing talent id string: %v", err)
+		log.Printf("Error parsing talent id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "Invalid talent id")
 		return
 	}
@@ -41,9 +41,8 @@ func (cfg *apiConfig) handlerTalentsGet(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve talent")
 		return
 	}
-
 	if userID != dbTalent.UserID {
-		respondWithError(w, http.StatusForbidden, "Cannot get talent")
+		respondWithError(w, http.StatusForbidden, "Cannot access talent")
 		return
 	}
 
