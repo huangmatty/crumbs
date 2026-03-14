@@ -27,6 +27,6 @@ RETURNING *;
 
 -- name: SoftDeleteTalent :one
 UPDATE talents
-SET deleted_at = NOW()
+SET updated_at = NOW(), deleted_at = NOW()
 WHERE id = $1
 RETURNING *;

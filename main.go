@@ -62,10 +62,12 @@ func main() {
 	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
 	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
 	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
-	mux.HandleFunc("DELETE /api/talent/{talentID}", cfg.handlerTalentsDelete)
+	mux.HandleFunc("DELETE /api/talents/{talentID}", cfg.handlerTalentsDelete)
 
+	mux.HandleFunc("GET /api/buyers", cfg.handlerBuyersList)
 	mux.HandleFunc("GET /api/buyers/{buyerID}", cfg.handlerBuyersGet)
 	mux.HandleFunc("POST /api/buyers", cfg.handlerBuyersCreate)
+	mux.HandleFunc("DELETE /api/buyers/{buyerID}", cfg.handlerBuyersDelete)
 
 	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerReset)

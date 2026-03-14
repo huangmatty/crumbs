@@ -9,7 +9,7 @@ import (
 	"github.com/huangmatty/crumbs/internal/auth"
 )
 
-func (cfg *apiConfig) handlerBuyersGet(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerBuyersDelete(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		log.Printf("Error getting JWT: %v", err)
@@ -33,26 +33,25 @@ func (cfg *apiConfig) handlerBuyersGet(w http.ResponseWriter, r *http.Request) {
 
 	dbBuyer, err := cfg.db.GetBuyerByID(r.Context(), buyerID)
 	if err == sql.ErrNoRows {
+		log.Printf("Error retrieving buyer: %v", err)
 		respondWithError(w, http.StatusNotFound, "Buyer doesn't exist")
 		return
 	}
 	if err != nil {
 		log.Printf("Error retrieving buyer: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve buyer")
+		respondWithError(w, http.StatusNotFound, "Couldn't retrieve buyer")
 		return
 	}
 	if userID != dbBuyer.UserID {
-		respondWithError(w, http.StatusForbidden, "Cannot access buyer")
+		respondWithError(w, http.StatusForbidden, "Cannot delete buyer")
 		return
 	}
 
-	buyer := BuyerDTO{
-		ID:        dbBuyer.ID,
-		CreatedAt: dbBuyer.CreatedAt,
-		UpdatedAt: dbBuyer.UpdatedAt,
-		Name:      dbBuyer.Name,
-		Email:     dbBuyer.Email,
-		UserID:    dbBuyer.UserID,
+	_, err = cfg.db.SoftDeleteBuyer(r.Context(), buyerID)
+	if err != nil {
+		log.Printf("Error soft deleting buyer: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete buyer")
+		return
 	}
-	respondWithJSON(w, http.StatusOK, buyer)
+	w.WriteHeader(http.StatusNoContent)
 }

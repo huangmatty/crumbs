@@ -29,7 +29,7 @@ func (cfg *apiConfig) handlerBuyersCreate(w http.ResponseWriter, r *http.Request
 	}
 	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
 	if err != nil {
-		log.Printf("Error validating JWT")
+		log.Printf("Error validating JWT: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
 		return
 	}

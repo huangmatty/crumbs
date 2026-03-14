@@ -97,7 +97,7 @@ func (q *Queries) GetBuyers(ctx context.Context, userID uuid.UUID) ([]Buyer, err
 
 const softDeleteBuyer = `-- name: SoftDeleteBuyer :one
 UPDATE buyers
-SET deleted_at = NOW()
+SET updated_at = NOW(), deleted_at = NOW()
 WHERE id = $1
 RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
 `

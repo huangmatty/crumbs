@@ -99,7 +99,7 @@ func (q *Queries) GetTalents(ctx context.Context, userID uuid.UUID) ([]Talent, e
 
 const softDeleteTalent = `-- name: SoftDeleteTalent :one
 UPDATE talents
-SET deleted_at = NOW()
+SET updated_at = NOW(), deleted_at = NOW()
 WHERE id = $1
 RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
 `

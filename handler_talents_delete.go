@@ -12,13 +12,13 @@ import (
 func (cfg *apiConfig) handlerTalentsDelete(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		log.Printf("Error getting JWT")
+		log.Printf("Error getting JWT: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
 		return
 	}
 	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
 	if err != nil {
-		log.Printf("Error validating JWT")
+		log.Printf("Error validating JWT: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
 		return
 	}

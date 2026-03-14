@@ -26,6 +26,6 @@ RETURNING *;
 
 -- name: SoftDeleteBuyer :one
 UPDATE buyers
-SET deleted_at = NOW()
+SET updated_at = NOW(), deleted_at = NOW()
 WHERE id = $1
 RETURNING *;

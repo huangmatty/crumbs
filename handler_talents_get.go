@@ -12,7 +12,7 @@ import (
 func (cfg *apiConfig) handlerTalentsGet(w http.ResponseWriter, r *http.Request) {
 	accessToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		log.Printf("Error getting JWT")
+		log.Printf("Error getting JWT: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
 		return
 	}
