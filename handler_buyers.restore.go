@@ -16,24 +16,24 @@ func (cfg *apiConfig) handlerBuyersRestore(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	dbBuyer, err := cfg.db.GetBuyerByID(r.Context(), buyerID)
+	dbBuyerUserID, err := cfg.db.GetUserIDForBuyer(r.Context(), buyerID)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Buyer doesn't exist", http.StatusNotFound)
 		return
 	}
 	if err != nil {
-		log.Printf("Error retrieving buyer: %v", err)
-		http.Error(w, "Couldn't retrieve buyer", http.StatusInternalServerError)
+		log.Printf("Error retrieving buyer's user id: %v", err)
+		http.Error(w, "Couldn't retrieve buyer's user id", http.StatusInternalServerError)
 		return
 	}
 
 	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
-	if userID != dbBuyer.UserID {
+	if userID != dbBuyerUserID {
 		http.Error(w, "Cannot restore buyer", http.StatusForbidden)
 		return
 	}
 
-	dbBuyer, err = cfg.db.RestoreBuyer(r.Context(), buyerID)
+	dbBuyer, err := cfg.db.RestoreBuyer(r.Context(), buyerID)
 	if err != nil {
 		log.Printf("Error restoring buyer: %v", err)
 		http.Error(w, "Failed to restore buyer", http.StatusInternalServerError)

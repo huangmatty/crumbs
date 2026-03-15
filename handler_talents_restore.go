@@ -16,23 +16,23 @@ func (cfg *apiConfig) handlerTalentsRestore(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	dbTalent, err := cfg.db.GetTalentByID(r.Context(), talentID)
+	dbTalentUserID, err := cfg.db.GetUserIDForTalent(r.Context(), talentID)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Talent doesn't exist", http.StatusNotFound)
 		return
 	}
 	if err != nil {
-		log.Printf("Error retrieving talent: %v", err)
-		http.Error(w, "Couldn't retrieve talent", http.StatusInternalServerError)
+		log.Printf("Error retrieving talent's user id: %v", err)
+		http.Error(w, "Couldn't retrieve talent's user id", http.StatusInternalServerError)
 	}
 
 	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
-	if userID != dbTalent.UserID {
+	if userID != dbTalentUserID {
 		http.Error(w, "Cannot restore talent", http.StatusForbidden)
 		return
 	}
 
-	dbTalent, err = cfg.db.RestoreTalent(r.Context(), talentID)
+	dbTalent, err := cfg.db.RestoreTalent(r.Context(), talentID)
 	if err != nil {
 		log.Printf("Error restoring talent: %v", err)
 		http.Error(w, "Failed to restore talent", http.StatusInternalServerError)

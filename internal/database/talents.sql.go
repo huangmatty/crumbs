@@ -97,6 +97,18 @@ func (q *Queries) GetTalents(ctx context.Context, userID uuid.UUID) ([]Talent, e
 	return items, nil
 }
 
+const getUserIDForTalent = `-- name: GetUserIDForTalent :one
+SELECT user_id FROM talents
+WHERE id = $1
+`
+
+func (q *Queries) GetUserIDForTalent(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getUserIDForTalent, id)
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
+}
+
 const restoreTalent = `-- name: RestoreTalent :one
 UPDATE talents
 SET updated_at = NOW(), deleted_at = NULL

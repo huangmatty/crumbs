@@ -36,24 +36,24 @@ func (cfg *apiConfig) handlerTalentsUpdateName(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	dbTalent, err := cfg.db.GetTalentByID(r.Context(), talentID)
+	dbTalentUserID, err := cfg.db.GetUserIDForTalent(r.Context(), talentID)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Talent doesn't exist", http.StatusBadRequest)
 		return
 	}
 	if err != nil {
-		log.Printf("Error retrieving talent: %v", err)
-		http.Error(w, "Couldn't retrieve talent", http.StatusInternalServerError)
+		log.Printf("Error retrieving talent's user id: %v", err)
+		http.Error(w, "Couldn't retrieve talent's user id", http.StatusInternalServerError)
 		return
 	}
 
 	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
-	if userID != dbTalent.UserID {
+	if userID != dbTalentUserID {
 		http.Error(w, "Cannot update talent", http.StatusForbidden)
 		return
 	}
 
-	dbTalent, err = cfg.db.UpdateTalentName(r.Context(), database.UpdateTalentNameParams{
+	dbTalent, err := cfg.db.UpdateTalentName(r.Context(), database.UpdateTalentNameParams{
 		Name: params.Name,
 		ID:   talentID,
 	})

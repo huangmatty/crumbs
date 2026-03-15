@@ -12,6 +12,10 @@ AND user_id = $1;
 SELECT * FROM buyers
 WHERE id = $1;
 
+-- name: GetUserIDForBuyer :one
+SELECT user_id FROM buyers
+WHERE id = $1;
+
 -- name: UpdateBuyerName :one
 UPDATE buyers
 SET updated_at = NOW(), name = $1

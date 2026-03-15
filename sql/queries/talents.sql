@@ -13,6 +13,10 @@ ORDER BY name;
 SELECT * FROM talents
 WHERE id = $1;
 
+-- name: GetUserIDForTalent :one
+SELECT user_id FROM talents
+WHERE id = $1;
+
 -- name: UpdateTalentName :one
 UPDATE talents
 SET updated_at = NOW(), name = $1

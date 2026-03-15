@@ -95,6 +95,18 @@ func (q *Queries) GetBuyers(ctx context.Context, userID uuid.UUID) ([]Buyer, err
 	return items, nil
 }
 
+const getUserIDForBuyer = `-- name: GetUserIDForBuyer :one
+SELECT user_id FROM buyers
+WHERE id = $1
+`
+
+func (q *Queries) GetUserIDForBuyer(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getUserIDForBuyer, id)
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
+}
+
 const restoreBuyer = `-- name: RestoreBuyer :one
 UPDATE buyers
 SET updated_at = NOW(), deleted_at = NULL
