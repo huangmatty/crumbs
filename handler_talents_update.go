@@ -10,22 +10,15 @@ import (
 	"github.com/huangmatty/crumbs/internal/database"
 )
 
-func (cfg *apiConfig) handlerTalentsUpdateName(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerTalentsUpdate(w http.ResponseWriter, r *http.Request) {
 	params := struct {
-		Name string `json:"name"`
+		Name  *string `json:"name,omitempty"`
+		Email *string `json:"email,omitempty"`
 	}{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
 		http.Error(w, "Couldn't decode JSON", http.StatusBadRequest)
-		return
-	}
-	if params.Name == "" {
-		http.Error(w, "Missing name", http.StatusBadRequest)
-		return
-	}
-	if len(params.Name) > maxNameLength {
-		http.Error(w, "Name is too long", http.StatusBadRequest)
 		return
 	}
 
@@ -36,31 +29,48 @@ func (cfg *apiConfig) handlerTalentsUpdateName(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	dbTalentUserID, err := cfg.db.GetUserIDForTalent(r.Context(), talentID)
+	dbTalent, err := cfg.db.GetTalentByID(r.Context(), talentID)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Talent doesn't exist", http.StatusBadRequest)
 		return
 	}
 	if err != nil {
-		log.Printf("Error retrieving talent's user id: %v", err)
-		http.Error(w, "Couldn't retrieve talent's user id", http.StatusInternalServerError)
+		log.Printf("Error retrieving talent: %v", err)
+		http.Error(w, "Couldn't retrieve talent", http.StatusInternalServerError)
 		return
 	}
 
 	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
-	if userID != dbTalentUserID {
+	if userID != dbTalent.UserID {
 		http.Error(w, "Cannot update talent", http.StatusForbidden)
 		return
 	}
 
-	dbTalent, err := cfg.db.UpdateTalentName(r.Context(), database.UpdateTalentNameParams{
-		Name: params.Name,
-		ID:   talentID,
-	})
-	if err != nil {
-		log.Printf("Error updating talent: %v", err)
-		http.Error(w, "Failed to update talent", http.StatusInternalServerError)
-		return
+	if params.Name != nil {
+		if len(*params.Name) > maxNameLength {
+			http.Error(w, "Name is too long", http.StatusBadRequest)
+			return
+		}
+		dbTalent, err = cfg.db.UpdateTalentName(r.Context(), database.UpdateTalentNameParams{
+			Name: *params.Name,
+			ID:   talentID,
+		})
+		if err != nil {
+			log.Printf("Error updating talent: %v", err)
+			http.Error(w, "Failed to update talent", http.StatusInternalServerError)
+			return
+		}
+	}
+	if params.Email != nil {
+		dbTalent, err = cfg.db.UpdateTalentEmail(r.Context(), database.UpdateTalentEmailParams{
+			Email: sql.NullString{String: *params.Email, Valid: true},
+			ID:    talentID,
+		})
+		if err != nil {
+			log.Printf("Error updating talent: %v", err)
+			http.Error(w, "Failed to update talent", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	talent := TalentDTO{

@@ -10,22 +10,15 @@ import (
 	"github.com/huangmatty/crumbs/internal/database"
 )
 
-func (cfg *apiConfig) handlerBuyersUpdateName(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerBuyersUpdate(w http.ResponseWriter, r *http.Request) {
 	params := struct {
-		Name string `json:"name"`
+		Name  *string `json:"name,omitempty"`
+		Email *string `json:"email,omitempty"`
 	}{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
 		http.Error(w, "Couldn't decode JSON", http.StatusBadRequest)
-		return
-	}
-	if params.Name == "" {
-		http.Error(w, "Missing name", http.StatusBadRequest)
-		return
-	}
-	if len(params.Name) > maxNameLength {
-		http.Error(w, "Name is too long", http.StatusBadRequest)
 		return
 	}
 
@@ -36,31 +29,48 @@ func (cfg *apiConfig) handlerBuyersUpdateName(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	dbBuyerUserID, err := cfg.db.GetUserIDForBuyer(r.Context(), buyerID)
+	dbBuyer, err := cfg.db.GetBuyerByID(r.Context(), buyerID)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Buyer doesn't exist", http.StatusBadRequest)
 		return
 	}
 	if err != nil {
-		log.Printf("Error retrieving buyer's user id: %v", err)
-		http.Error(w, "Couldn't retrieve buyer's user id", http.StatusInternalServerError)
+		log.Printf("Error retrieving buyer: %v", err)
+		http.Error(w, "Couldn't retrieve buyer", http.StatusInternalServerError)
 		return
 	}
 
 	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
-	if userID != dbBuyerUserID {
+	if userID != dbBuyer.UserID {
 		http.Error(w, "Cannot update buyer", http.StatusForbidden)
 		return
 	}
 
-	dbBuyer, err := cfg.db.UpdateBuyerName(r.Context(), database.UpdateBuyerNameParams{
-		Name: params.Name,
-		ID:   buyerID,
-	})
-	if err != nil {
-		log.Printf("Error updating buyer: %v", err)
-		http.Error(w, "Failed to update buyer", http.StatusInternalServerError)
-		return
+	if params.Name != nil {
+		if len(*params.Name) > maxNameLength {
+			http.Error(w, "Name is too long", http.StatusBadRequest)
+			return
+		}
+		dbBuyer, err = cfg.db.UpdateBuyerName(r.Context(), database.UpdateBuyerNameParams{
+			Name: *params.Name,
+			ID:   buyerID,
+		})
+		if err != nil {
+			log.Printf("Error updating buyer: %v", err)
+			http.Error(w, "Failed to update buyer", http.StatusInternalServerError)
+			return
+		}
+	}
+	if params.Email != nil {
+		dbBuyer, err = cfg.db.UpdateBuyerEmail(r.Context(), database.UpdateBuyerEmailParams{
+			Email: *params.Email,
+			ID:    buyerID,
+		})
+		if err != nil {
+			log.Printf("Error updating buyer: %v", err)
+			http.Error(w, "Failed to update buyer", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	buyer := BuyerDTO{
