@@ -9,8 +9,7 @@ import (
 )
 
 func (cfg *apiConfig) handlerBuyersRestore(w http.ResponseWriter, r *http.Request) {
-	buyerIDStr := r.PathValue("buyerID")
-	buyerID, err := uuid.Parse(buyerIDStr)
+	buyerID, err := uuid.Parse(r.PathValue("buyerID"))
 	if err != nil {
 		log.Printf("Error parsing buyer id: %v", err)
 		http.Error(w, "Invalid buyer id", http.StatusBadRequest)
@@ -28,7 +27,7 @@ func (cfg *apiConfig) handlerBuyersRestore(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	userID := r.Context().Value(cfg.authUserContextKey)
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	if userID != dbBuyer.UserID {
 		http.Error(w, "Cannot restore buyer", http.StatusForbidden)
 		return

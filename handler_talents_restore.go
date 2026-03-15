@@ -9,8 +9,7 @@ import (
 )
 
 func (cfg *apiConfig) handlerTalentsRestore(w http.ResponseWriter, r *http.Request) {
-	talentIDStr := r.PathValue("talentID")
-	talentID, err := uuid.Parse(talentIDStr)
+	talentID, err := uuid.Parse(r.PathValue("talentID"))
 	if err != nil {
 		log.Printf("Error parsing talent id: %v", err)
 		http.Error(w, "Invalid talent id", http.StatusBadRequest)
@@ -27,7 +26,7 @@ func (cfg *apiConfig) handlerTalentsRestore(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Couldn't retrieve talent", http.StatusInternalServerError)
 	}
 
-	userID := r.Context().Value(cfg.authUserContextKey)
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	if userID != dbTalent.UserID {
 		http.Error(w, "Cannot restore talent", http.StatusForbidden)
 		return

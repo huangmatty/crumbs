@@ -9,8 +9,7 @@ import (
 )
 
 func (cfg *apiConfig) handlerTalentsDelete(w http.ResponseWriter, r *http.Request) {
-	talentIDStr := r.PathValue("talentID")
-	talentID, err := uuid.Parse(talentIDStr)
+	talentID, err := uuid.Parse(r.PathValue("talentID"))
 	if err != nil {
 		log.Printf("Error parsing talent id: %v", err)
 		http.Error(w, "Invalid talent id", http.StatusBadRequest)

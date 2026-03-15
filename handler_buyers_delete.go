@@ -9,8 +9,7 @@ import (
 )
 
 func (cfg *apiConfig) handlerBuyersDelete(w http.ResponseWriter, r *http.Request) {
-	buyerIDStr := r.PathValue("buyerID")
-	buyerID, err := uuid.Parse(buyerIDStr)
+	buyerID, err := uuid.Parse(r.PathValue("buyerID"))
 	if err != nil {
 		log.Printf("Error parsing buyer id: %v", err)
 		http.Error(w, "Invalid buyer id", http.StatusBadRequest)
