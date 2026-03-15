@@ -29,3 +29,9 @@ UPDATE buyers
 SET updated_at = NOW(), deleted_at = NOW()
 WHERE id = $1
 RETURNING *;
+
+-- name: RestoreBuyer :one
+UPDATE buyers
+SET updated_at = NOW(), deleted_at = NULL
+WHERE id = $1
+RETURNING *;

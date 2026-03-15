@@ -30,3 +30,9 @@ UPDATE talents
 SET updated_at = NOW(), deleted_at = NOW()
 WHERE id = $1
 RETURNING *;
+
+-- name: RestoreTalent :one
+UPDATE talents
+SET updated_at = NOW(), deleted_at = NULL
+WHERE id = $1
+RETURNING *;

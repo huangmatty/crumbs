@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) handlerTalentsDelete(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerTalentsRestore(w http.ResponseWriter, r *http.Request) {
 	talentIDStr := r.PathValue("talentID")
 	talentID, err := uuid.Parse(talentIDStr)
 	if err != nil {
@@ -25,20 +25,30 @@ func (cfg *apiConfig) handlerTalentsDelete(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		log.Printf("Error retrieving talent: %v", err)
 		http.Error(w, "Couldn't retrieve talent", http.StatusInternalServerError)
-		return
 	}
 
-	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
+	userID := r.Context().Value(cfg.authUserContextKey)
 	if userID != dbTalent.UserID {
-		http.Error(w, "Cannot delete talent", http.StatusForbidden)
+		http.Error(w, "Cannot restore talent", http.StatusForbidden)
 		return
 	}
 
-	_, err = cfg.db.SoftDeleteTalent(r.Context(), talentID)
+	dbTalent, err = cfg.db.RestoreTalent(r.Context(), talentID)
 	if err != nil {
-		log.Printf("Error soft-deleting talent: %v", err)
-		http.Error(w, "Failed to delete talent", http.StatusInternalServerError)
+		log.Printf("Error restoring talent: %v", err)
+		http.Error(w, "Failed to restore talent", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+
+	talent := TalentDTO{
+		ID:        dbTalent.ID,
+		CreatedAt: dbTalent.CreatedAt,
+		UpdatedAt: dbTalent.UpdatedAt,
+		Name:      dbTalent.Name,
+		UserID:    dbTalent.UserID,
+	}
+	if dbTalent.Email.Valid {
+		talent.Email = dbTalent.Email.String
+	}
+	respondWithJSON(w, http.StatusOK, talent)
 }

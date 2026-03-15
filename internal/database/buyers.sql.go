@@ -95,6 +95,28 @@ func (q *Queries) GetBuyers(ctx context.Context, userID uuid.UUID) ([]Buyer, err
 	return items, nil
 }
 
+const restoreBuyer = `-- name: RestoreBuyer :one
+UPDATE buyers
+SET updated_at = NOW(), deleted_at = NULL
+WHERE id = $1
+RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
+`
+
+func (q *Queries) RestoreBuyer(ctx context.Context, id uuid.UUID) (Buyer, error) {
+	row := q.db.QueryRowContext(ctx, restoreBuyer, id)
+	var i Buyer
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Name,
+		&i.Email,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const softDeleteBuyer = `-- name: SoftDeleteBuyer :one
 UPDATE buyers
 SET updated_at = NOW(), deleted_at = NOW()

@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) handlerBuyersDelete(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerBuyersRestore(w http.ResponseWriter, r *http.Request) {
 	buyerIDStr := r.PathValue("buyerID")
 	buyerID, err := uuid.Parse(buyerIDStr)
 	if err != nil {
@@ -28,17 +28,26 @@ func (cfg *apiConfig) handlerBuyersDelete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
+	userID := r.Context().Value(cfg.authUserContextKey)
 	if userID != dbBuyer.UserID {
-		http.Error(w, "Cannot delete buyer", http.StatusForbidden)
+		http.Error(w, "Cannot restore buyer", http.StatusForbidden)
 		return
 	}
 
-	_, err = cfg.db.SoftDeleteBuyer(r.Context(), buyerID)
+	dbBuyer, err = cfg.db.RestoreBuyer(r.Context(), buyerID)
 	if err != nil {
-		log.Printf("Error soft-deleting buyer: %v", err)
-		http.Error(w, "Failed to delete buyer", http.StatusInternalServerError)
+		log.Printf("Error restoring buyer: %v", err)
+		http.Error(w, "Failed to restore buyer", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+
+	buyer := BuyerDTO{
+		ID:        dbBuyer.ID,
+		CreatedAt: dbBuyer.CreatedAt,
+		UpdatedAt: dbBuyer.UpdatedAt,
+		Name:      dbBuyer.Name,
+		Email:     dbBuyer.Email,
+		UserID:    dbBuyer.UserID,
+	}
+	respondWithJSON(w, http.StatusOK, buyer)
 }

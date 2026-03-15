@@ -65,11 +65,13 @@ func main() {
 
 	mux.Handle("GET /api/talents", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsList)))
 	mux.Handle("GET /api/talents/{talentID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsGet)))
+	mux.Handle("PUT /api/talents/restore/{talentID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsRestore)))
 	mux.Handle("POST /api/talents", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsCreate)))
 	mux.Handle("DELETE /api/talents/{talentID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsDelete)))
 
 	mux.Handle("GET /api/buyers", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersList)))
 	mux.Handle("GET /api/buyers/{buyerID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersGet)))
+	mux.Handle("PUT /api/buyers/restore/{buyerID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersRestore)))
 	mux.Handle("POST /api/buyers", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersCreate)))
 	mux.Handle("DELETE /api/buyers/{buyerID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersDelete)))
 

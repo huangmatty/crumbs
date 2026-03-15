@@ -97,6 +97,28 @@ func (q *Queries) GetTalents(ctx context.Context, userID uuid.UUID) ([]Talent, e
 	return items, nil
 }
 
+const restoreTalent = `-- name: RestoreTalent :one
+UPDATE talents
+SET updated_at = NOW(), deleted_at = NULL
+WHERE id = $1
+RETURNING id, created_at, updated_at, deleted_at, name, email, user_id
+`
+
+func (q *Queries) RestoreTalent(ctx context.Context, id uuid.UUID) (Talent, error) {
+	row := q.db.QueryRowContext(ctx, restoreTalent, id)
+	var i Talent
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Name,
+		&i.Email,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const softDeleteTalent = `-- name: SoftDeleteTalent :one
 UPDATE talents
 SET updated_at = NOW(), deleted_at = NOW()
