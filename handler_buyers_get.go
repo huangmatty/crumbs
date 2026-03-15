@@ -6,43 +6,31 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/huangmatty/crumbs/internal/auth"
 )
 
 func (cfg *apiConfig) handlerBuyersGet(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		log.Printf("Error getting JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
-		return
-	}
-	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
-	if err != nil {
-		log.Printf("Error validating JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
-		return
-	}
-
 	buyerIDStr := r.PathValue("buyerID")
 	buyerID, err := uuid.Parse(buyerIDStr)
 	if err != nil {
 		log.Printf("Error parsing buyer id: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Invalid buyer id")
+		http.Error(w, "Invalid buyer id", http.StatusBadRequest)
 		return
 	}
 
 	dbBuyer, err := cfg.db.GetBuyerByID(r.Context(), buyerID)
 	if err == sql.ErrNoRows {
-		respondWithError(w, http.StatusNotFound, "Buyer doesn't exist")
+		http.Error(w, "Buyer doesn't exist", http.StatusNotFound)
 		return
 	}
 	if err != nil {
 		log.Printf("Error retrieving buyer: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve buyer")
+		http.Error(w, "Couldn't retrieve buyer", http.StatusInternalServerError)
 		return
 	}
+
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	if userID != dbBuyer.UserID {
-		respondWithError(w, http.StatusForbidden, "Cannot access buyer")
+		http.Error(w, "Cannot access buyer", http.StatusForbidden)
 		return
 	}
 

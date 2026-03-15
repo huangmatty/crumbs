@@ -21,26 +21,26 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
+		http.Error(w, "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 
 	dbUser, err := cfg.db.GetUserByUsername(r.Context(), params.Username)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Incorrect username or password")
+		http.Error(w, "Incorrect username or password", http.StatusUnauthorized)
 		return
 	}
 
 	match, err := auth.CheckPasswordHash(params.Password, dbUser.HashedPassword)
 	if err != nil || !match {
-		respondWithError(w, http.StatusUnauthorized, "Incorrect username or password")
+		http.Error(w, "Incorrect username or password", http.StatusUnauthorized)
 		return
 	}
 
 	accessToken, err := auth.CreateJWT(dbUser.ID, cfg.jwtSecret, defaultTokenDuration)
 	if err != nil {
 		log.Printf("Error creating JWT: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to create JWT")
+		http.Error(w, "Failed to create JWT", http.StatusInternalServerError)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Printf("Error creating refresh token: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to create refresh token")
+		http.Error(w, "Failed to create refresh token", http.StatusInternalServerError)
 		return
 	}
 

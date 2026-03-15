@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/huangmatty/crumbs/internal/auth"
 	"github.com/huangmatty/crumbs/internal/database"
 )
 
@@ -21,19 +20,6 @@ type BuyerDTO struct {
 }
 
 func (cfg *apiConfig) handlerBuyersCreate(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		log.Printf("Error getting JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
-		return
-	}
-	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
-	if err != nil {
-		log.Printf("Error validating JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
-		return
-	}
-
 	params := struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
@@ -42,22 +28,23 @@ func (cfg *apiConfig) handlerBuyersCreate(w http.ResponseWriter, r *http.Request
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
+		http.Error(w, "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 	if params.Name == "" {
-		respondWithError(w, http.StatusBadRequest, "Missing name")
+		http.Error(w, "Missing name", http.StatusBadRequest)
 		return
 	}
 	if len(params.Name) > maxNameLength {
-		respondWithError(w, http.StatusBadRequest, "Name is too long")
+		http.Error(w, "Name is too long", http.StatusBadRequest)
 		return
 	}
 	if params.Email == "" {
-		respondWithError(w, http.StatusBadRequest, "Missing email")
+		http.Error(w, "Missing email address", http.StatusBadRequest)
 		return
 	}
 
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	dbBuyer, err := cfg.db.CreateBuyer(r.Context(), database.CreateBuyerParams{
 		Name:   params.Name,
 		Email:  params.Email,
@@ -65,7 +52,7 @@ func (cfg *apiConfig) handlerBuyersCreate(w http.ResponseWriter, r *http.Request
 	})
 	if err != nil {
 		log.Printf("Error creating buyer: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't create buyer")
+		http.Error(w, "Failed to create buyer", http.StatusInternalServerError)
 		return
 	}
 

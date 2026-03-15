@@ -5,24 +5,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/huangmatty/crumbs/internal/auth"
 	"github.com/huangmatty/crumbs/internal/database"
 )
 
 func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		log.Printf("Error getting JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
-		return
-	}
-	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
-	if err != nil {
-		log.Printf("Error validating JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
-		return
-	}
-
 	params := struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -31,26 +19,27 @@ func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request)
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
+		http.Error(w, "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 	if params.Email == "" {
-		respondWithError(w, http.StatusBadRequest, "Missing email")
+		http.Error(w, "Missing email address", http.StatusBadRequest)
 		return
 	}
 	if len(params.Email) > maxEmailLength {
-		respondWithError(w, http.StatusBadRequest, "Email is too long")
+		http.Error(w, "Email address is too long", http.StatusBadRequest)
 		return
 	}
 	if len(params.Password) < minPasswordLength {
-		respondWithError(w, http.StatusBadRequest, "Password must have at least 12 characters")
+		http.Error(w, "Password must have at least 12 characters", http.StatusBadRequest)
 		return
 	}
 
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	hashedPassword, err := auth.HashPassword(params.Password)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to hash password")
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 	_, err = cfg.db.UpdateUserPassword(r.Context(), database.UpdateUserPasswordParams{
@@ -59,7 +48,7 @@ func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		log.Printf("Error updating user password: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to update password")
+		http.Error(w, "Failed to update password", http.StatusInternalServerError)
 		return
 	}
 	dbUser, err := cfg.db.UpdateUserEmail(r.Context(), database.UpdateUserEmailParams{
@@ -68,7 +57,7 @@ func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		log.Printf("Error updating user email: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to update email")
+		http.Error(w, "Failed to update email address", http.StatusInternalServerError)
 		return
 	}
 

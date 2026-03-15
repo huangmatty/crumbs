@@ -4,27 +4,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/huangmatty/crumbs/internal/auth"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerBuyersList(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		log.Printf("Error getting JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
-		return
-	}
-	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
-	if err != nil {
-		log.Printf("Error validating JWT: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid access token")
-		return
-	}
-
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	dbBuyers, err := cfg.db.GetBuyers(r.Context(), userID)
 	if err != nil {
 		log.Printf("Error retrieving buyers: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retieve buyers")
+		http.Error(w, "Couldn't retrieve buyers", http.StatusInternalServerError)
 		return
 	}
 

@@ -12,29 +12,29 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		log.Printf("Error getting refresh token: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Couldn't get refresh token")
+		http.Error(w, "Didn't get refresh token", http.StatusUnauthorized)
 		return
 	}
 	dbRefreshToken, err := cfg.db.GetRefreshToken(r.Context(), refreshToken)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Invalid refresh token")
+		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
 		return
 	}
 	if dbRefreshToken.RevokedAt.Valid || dbRefreshToken.ExpiresAt.Before(time.Now()) {
-		respondWithError(w, http.StatusUnauthorized, "Refresh token has expired or has been revoked")
+		http.Error(w, "Refresh token has expired or has been revoked", http.StatusUnauthorized)
 		return
 	}
 
 	dbUser, err := cfg.db.GetUserFromRefreshToken(r.Context(), dbRefreshToken.Token)
 	if err != nil {
 		log.Printf("Error getting user from refresh token: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't get user from refresh token")
+		http.Error(w, "Couldn't get user from refresh token", http.StatusInternalServerError)
 		return
 	}
 	token, err := auth.CreateJWT(dbUser.ID, cfg.jwtSecret, time.Hour)
 	if err != nil {
 		log.Printf("Error creating JWT: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to create access token")
+		http.Error(w, "Failed to create access token", http.StatusInternalServerError)
 		return
 	}
 	respondWithJSON(w, http.StatusOK, struct {

@@ -4,27 +4,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/huangmatty/crumbs/internal/auth"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerTalentsList(w http.ResponseWriter, r *http.Request) {
-	accessToken, err := auth.GetBearerToken(r.Header)
-	if err != nil {
-		log.Printf("Error getting access token: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Couldn't get access token")
-		return
-	}
-	userID, err := auth.ValidateJWT(accessToken, cfg.jwtSecret)
-	if err != nil {
-		log.Printf("Error validating access token: %v", err)
-		respondWithError(w, http.StatusUnauthorized, "Invalid accesss token")
-		return
-	}
-
+	userID := r.Context().Value(cfg.authUserContextKey).(uuid.UUID)
 	dbTalents, err := cfg.db.GetTalents(r.Context(), userID)
 	if err != nil {
 		log.Printf("Error retrieving talents: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve talents")
+		http.Error(w, "Couldn't retrieve talents", http.StatusInternalServerError)
 		return
 	}
 

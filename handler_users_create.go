@@ -37,34 +37,34 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
-		respondWithError(w, http.StatusBadRequest, "Couldn't decode JSON")
+		http.Error(w, "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 	if params.Username == "" {
-		respondWithError(w, http.StatusBadRequest, "Missing username")
+		http.Error(w, "Missing username", http.StatusBadRequest)
 		return
 	}
 	if len(params.Username) > maxUsernameLength {
-		respondWithError(w, http.StatusBadRequest, "Username is too long")
+		http.Error(w, "Username is too long", http.StatusBadRequest)
 		return
 	}
 	if params.Email == "" {
-		respondWithError(w, http.StatusBadRequest, "Missing email")
+		http.Error(w, "Missing email address", http.StatusBadRequest)
 		return
 	}
 	if len(params.Email) > maxEmailLength {
-		respondWithError(w, http.StatusBadRequest, "Email is too long")
+		http.Error(w, "Email address is too long", http.StatusBadRequest)
 		return
 	}
 	if len(params.Password) < minPasswordLength {
-		respondWithError(w, http.StatusBadRequest, "Password must have at least 12 characters")
+		http.Error(w, "Password must have at least 12 characters", http.StatusBadRequest)
 		return
 	}
 
 	hashedPassword, err := auth.HashPassword(params.Password)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to hash password")
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		log.Printf("Error creating user: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 

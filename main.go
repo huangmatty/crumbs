@@ -15,11 +15,14 @@ import (
 const port = "8080"
 const filepathRoot = "."
 
+type contextKey string
+
 type apiConfig struct {
-	db        *database.Queries
-	platform  string
-	jwtSecret string
-	fsHits    atomic.Int32
+	db                 *database.Queries
+	platform           string
+	jwtSecret          string
+	authUserContextKey contextKey
+	fsHits             atomic.Int32
 }
 
 func main() {
@@ -39,9 +42,10 @@ func main() {
 	}
 
 	cfg := &apiConfig{
-		db:        database.New(db),
-		platform:  platform,
-		jwtSecret: jwtSecret,
+		db:                 database.New(db),
+		platform:           platform,
+		jwtSecret:          jwtSecret,
+		authUserContextKey: "user",
 	}
 
 	mux := http.NewServeMux()
@@ -56,18 +60,18 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke)
 
-	mux.HandleFunc("PUT /api/users", cfg.handlerUsersUpdate)
+	mux.Handle("PUT /api/users", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerUsersUpdate)))
 	mux.HandleFunc("POST /api/users", cfg.handlerUsersCreate)
 
-	mux.HandleFunc("GET /api/talents", cfg.handlerTalentsList)
-	mux.HandleFunc("GET /api/talents/{talentID}", cfg.handlerTalentsGet)
-	mux.HandleFunc("POST /api/talents", cfg.handlerTalentsCreate)
-	mux.HandleFunc("DELETE /api/talents/{talentID}", cfg.handlerTalentsDelete)
+	mux.Handle("GET /api/talents", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsList)))
+	mux.Handle("GET /api/talents/{talentID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsGet)))
+	mux.Handle("POST /api/talents", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsCreate)))
+	mux.Handle("DELETE /api/talents/{talentID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerTalentsDelete)))
 
-	mux.HandleFunc("GET /api/buyers", cfg.handlerBuyersList)
-	mux.HandleFunc("GET /api/buyers/{buyerID}", cfg.handlerBuyersGet)
-	mux.HandleFunc("POST /api/buyers", cfg.handlerBuyersCreate)
-	mux.HandleFunc("DELETE /api/buyers/{buyerID}", cfg.handlerBuyersDelete)
+	mux.Handle("GET /api/buyers", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersList)))
+	mux.Handle("GET /api/buyers/{buyerID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersGet)))
+	mux.Handle("POST /api/buyers", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersCreate)))
+	mux.Handle("DELETE /api/buyers/{buyerID}", cfg.middlewareAuth(http.HandlerFunc(cfg.handlerBuyersDelete)))
 
 	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", cfg.handlerReset)
