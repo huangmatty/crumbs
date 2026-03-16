@@ -39,16 +39,8 @@ type Offer struct {
 	DeletedAt sql.NullTime
 	StartDate sql.NullTime
 	EndDate   sql.NullTime
-	UserID    uuid.UUID
-}
-
-type OffersBuyer struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt sql.NullTime
-	OfferID   uuid.UUID
 	BuyerID   uuid.UUID
+	UserID    uuid.UUID
 }
 
 type OffersTalent struct {

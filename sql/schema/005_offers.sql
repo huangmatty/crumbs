@@ -6,6 +6,7 @@ CREATE TABLE offers (
     deleted_at TIMESTAMP,
     start_date DATE,
     end_date DATE,
+    buyer_id UUID NOT NULL REFERENCES buyers (id),
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
